@@ -1,31 +1,40 @@
-# Node dependencies
+# Dependencies
 node_modules/
 frontend/node_modules/
 backend/node_modules/
 
-# Production build
-dist/
-build/
-
-# Vite cache
-.vite/
+# Build artifacts
+frontend/dist/
+backend/dist/
 
 # Logs
-logs/
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Environment variables
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# OS-specific files
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# IDE and editor folders
-.vscode/
-.idea/ 
+# Optional files
+frontend/public/vite.svg

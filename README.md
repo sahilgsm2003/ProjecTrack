@@ -1,49 +1,15 @@
 # ProjecTrack
 
-ProjecTrack is a Progressive Web Application (PWA) designed to serve as an academic project management tool within a single college. It facilitates student group formation, project proposal and approval workflows, and ongoing collaboration with supervising teachers.
+ProjecTrack is a mobile application, built using PWA, designed to serve as an academic project management tool within a single college. Its primary function is to facilitate student group formation, streamline the project proposal and approval process with supervising teachers, and manage ongoing project collaboration.
 
-## Project Structure
-
-```
-.
-├── frontend/    # React + Vite PWA application
-└── backend/     # Node.js + Express REST API
-```
+This repository contains the source code for ProjecTrack, divided into:
+- `/frontend`: The React-based PWA client.
+- `/backend`: The Node.js with Express.js API server.
 
 ## Getting Started
 
-### Prerequisites
+(Instructions to be added later)
 
-- Node.js (>=14.x)
-- npm (>=6.x) or yarn
-- PostgreSQL
+## Project Specification
 
-### Setup
-
-1. Clone the repository:
-
-   ```bash
-   git clone <repo_url>
-   cd projectrack
-   ```
-
-2. Initialize the backend:
-
-   ```bash
-   cd backend
-   npm install
-   # configure database in .env (see .env.example)
-   npm run migrate
-   npm start
-   ```
-
-3. Initialize the frontend:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-## License
-
-MIT
+Refer to `project_spec.md` for detailed project requirements and design.
