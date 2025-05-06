@@ -38,6 +38,8 @@
       meetingsWithStudentGroup Meeting[] @relation("StudentGroupForMeeting") // Meetings for the student group
       sentMessages  Message[] @relation("MessageSender")
       availability  TeacherAvailability[] @relation("TeacherAvailability")
+      sentGroupInvitations GroupInvitation[] @relation("SentGroupInvitations")
+      receivedGroupInvitations GroupInvitation[] @relation("InvitedToGroup")
 
       createdAt DateTime @default(now())
       updatedAt DateTime @updatedAt
@@ -55,6 +57,7 @@
       leader      User   @relation("GroupLeader", fields: [leaderId], references: [id])
       members     User[] @relation("GroupMembers") // Many-to-many with User for members
       project     Project? // A group can have one active project (as per "approved proposal should transition into an active project")
+      invitations GroupInvitation[]
 
       // For tracking invitations (simplified, could be a separate model)
       // pendingInvitations String[] // User emails or IDs
@@ -228,4 +231,29 @@
 
       createdAt DateTime @default(now())
       updatedAt DateTime @updatedAt
+    }
+
+    model GroupInvitation {
+      id        String            @id @default(cuid())
+      status    InvitationStatus  @default(PENDING) // PENDING, ACCEPTED, REJECTED
+
+      groupId   String
+      group     Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+      invitedUserId String
+      invitedUser   User              @relation("InvitedToGroup", fields: [invitedUserId], references: [id])
+
+      inviterId String // The user ID of the group leader who sent the invitation
+      inviter   User              @relation("SentGroupInvitations", fields: [inviterId], references: [id])
+
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt
+
+      @@unique([groupId, invitedUserId]) // A user can only be invited once to the same group
+    }
+
+    enum InvitationStatus {
+      PENDING
+      ACCEPTED
+      REJECTED
     }
