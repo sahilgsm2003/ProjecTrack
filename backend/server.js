@@ -26,16 +26,6 @@ app.use("/api/groups", groupRoutes); // All routes in groupRoutes will be prefix
 // Mount project routes
 app.use("/api/projects", projectRoutes); // All routes in projectRoutes will be prefixed with /api/projects
 
-// Placeholder for other future API routes
-// For example:
-// import projectRoutes from './routes/projectRoutes.js';
-// app.use('/api/projects', projectRoutes);
-//
-// import groupRoutes from './routes/groupRoutes.js';
-// app.use('/api/groups', groupRoutes);
-
-// Global error handler (very basic example)
-// You can expand this to handle different types of errors more gracefully
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("Something broke!");

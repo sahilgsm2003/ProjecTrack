@@ -208,10 +208,6 @@ router.put("/profile", protect, async (req, res) => {
     if (name !== undefined) updateData.name = name;
 
     // FR1.3 allows managing Email.
-    // IMPORTANT: Changing email if it's the primary login identifier can be complex.
-    // It's also a unique field.
-    // For MVP, consider if changing email should require re-verification or if it has other implications.
-    // Here, we'll allow it but ensure it remains unique if changed.
     if (email !== undefined && email !== req.user.email) {
       const existingUserWithNewEmail = await prisma.user.findUnique({
         where: { email },

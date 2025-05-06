@@ -69,12 +69,6 @@ router.post("/", protect, async (req, res) => {
       // If existing project was REJECTED or COMPLETED, we might allow a new proposal.
       // This would mean the old project record needs to be disassociated or handled differently.
       // For MVP, let's assume if a project record exists for the group, no new proposals until it's resolved/deleted.
-      // The unique constraint on Project.groupId is the main guard here.
-      // To allow a new proposal after rejection, you might "soft delete" or archive the old project,
-      // or disassociate it from the group. Our current schema makes this tricky without such logic.
-      // For now, the unique constraint is king. If a project record exists for the group, a new one cannot be created.
-      // So, if a project exists, we should inform the user, regardless of status,
-      // because the DB will prevent a new one with the same groupId.
       return res.status(409).json({
         message: `A project already exists for this group (Status: ${existingProject.status}). Cannot create a new one.`,
       });

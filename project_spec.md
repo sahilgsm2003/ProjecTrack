@@ -122,12 +122,6 @@ Academic institutions often struggle with streamlined management of student proj
    * **Group Detail / Review**: Project info, milestones progress, document submissions → feedback
    * **Embedded Chat Interface**
 
-4. **Global Components & Patterns**
-
-   * Notifications Center (bell icon + badge)
-   * Push/Web Notifications
-   * Responsive PWA Shell (installable, offline-capable)
-
 ---
 
 ## Suggested Tech Stack
@@ -146,7 +140,7 @@ Academic institutions often struggle with streamlined management of student proj
 
 ```mermaid
 flowchart LR
-  subgraph Frontend (PWA)
+  subgraph Frontend PWA
     A[React + Vite] -->|REST| B(API Server)
     A -->|Socket.IO| C[Chat Server]
   end
