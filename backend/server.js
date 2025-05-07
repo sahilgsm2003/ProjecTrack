@@ -4,6 +4,8 @@ import prisma from "./prisma/client.js"; // Or your chosen path to the prisma cl
 import authRoutes from "./routes/authRoutes.js"; // Import the auth routes
 import groupRoutes from "./routes/groupRoutes.js"; // Import the group routes
 import projectRoutes from "./routes/projectRoutes.js"; // Import the project routes
+import milestoneRoutes from "./routes/milestoneRoutes.js"; // Import milestone routes
+import submissionRoutes from "./routes/submissionRoutes.js"; // Import submission routes
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Backend server port
@@ -25,6 +27,12 @@ app.use("/api/groups", groupRoutes); // All routes in groupRoutes will be prefix
 
 // Mount project routes
 app.use("/api/projects", projectRoutes); // All routes in projectRoutes will be prefixed with /api/projects
+
+// Mount milestone routes
+app.use("/api/milestones", milestoneRoutes); // Mount milestone routes
+
+// Mount submission routes
+app.use("/api/submissions", submissionRoutes); // Mount submission routes
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

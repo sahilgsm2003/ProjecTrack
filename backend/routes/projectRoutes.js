@@ -279,4 +279,226 @@ router.patch("/:projectId/status", protect, async (req, res) => {
   }
 });
 
+// FR4.3 (Student Group): Group members must be able to collaboratively define project milestones
+// POST /api/projects/:projectId/milestones
+router.post("/:projectId/milestones", protect, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { title, description, dueDate } = req.body; // dueDate is optional
+    const user = req.user; // Authenticated user
+
+    // 1. Validate input
+    if (!title || title.trim() === "") {
+      return res.status(400).json({ message: "Milestone title is required." });
+    }
+
+    // 2. Find the project and verify user is part of the project's group
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        group: {
+          include: {
+            members: true, // To check if user is a member
+            leader: true, // To check if user is the leader
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // 3. Authorization: Check if user is a member or leader of the project's group
+    const isMember = project.group.members.some(
+      (member) => member.id === user.id
+    );
+    const isLeader = project.group.leaderId === user.id;
+
+    if (!isMember && !isLeader) {
+      return res.status(403).json({
+        message: "You are not a member of the group that owns this project.",
+      });
+    }
+
+    // 4. Ensure the project is approved/active
+    // (FR4.3: "for their approved projects")
+    if (project.status !== "APPROVED" && project.status !== "ACTIVE") {
+      // Assuming 'APPROVED' transitions to 'ACTIVE' or is treated as such for work.
+      // If you have a distinct 'ACTIVE' status that is set later, adjust this.
+      return res.status(403).json({
+        message: `Milestones can only be added to approved/active projects. Current status: ${project.status}`,
+      });
+    }
+
+    // 5. Create the milestone
+    const milestoneData = {
+      title,
+      description: description || null,
+      projectId: projectId,
+      // lastUpdatedBy: user.id, // We can add this if needed for FR4.4
+    };
+
+    if (dueDate) {
+      // Basic validation for dueDate format (e.g., ISO string) can be added here if needed
+      // For Prisma, it expects a DateTime compatible value.
+      const parsedDueDate = new Date(dueDate);
+      if (isNaN(parsedDueDate.getTime())) {
+        return res.status(400).json({
+          message: "Invalid due date format. Please use a valid date string.",
+        });
+      }
+      milestoneData.dueDate = parsedDueDate;
+    }
+
+    const newMilestone = await prisma.milestone.create({
+      data: milestoneData,
+    });
+
+    res.status(201).json({
+      message: "Milestone added successfully.",
+      milestone: newMilestone,
+    });
+  } catch (error) {
+    console.error("Add milestone error:", error);
+    res.status(500).json({
+      message: "Server error while adding milestone.",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/projects/:projectId/milestones (List all milestones for a project)
+router.get("/:projectId/milestones", protect, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const user = req.user;
+
+    // 1. Find the project
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        group: {
+          include: {
+            members: true,
+            leader: true,
+          },
+        },
+        // supervisor: true // Also include supervisor
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // 2. Authorization:
+    // User must be a member of the project's group OR the project's supervisor
+    const isMember = project.group.members.some(
+      (member) => member.id === user.id
+    );
+    const isLeader = project.group.leaderId === user.id;
+    const isSupervisor = project.supervisorId === user.id;
+
+    if (!isMember && !isLeader && !isSupervisor) {
+      return res.status(403).json({
+        message: "You are not authorized to view milestones for this project.",
+      });
+    }
+
+    // 3. Fetch milestones for the project
+    const milestones = await prisma.milestone.findMany({
+      where: {
+        projectId: projectId,
+      },
+      orderBy: {
+        createdAt: "asc", // Or 'dueDate' or 'title', depending on desired order
+      },
+    });
+
+    res.status(200).json(milestones);
+  } catch (error) {
+    console.error("List milestones error:", error);
+    res.status(500).json({
+      message: "Server error while fetching milestones.",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/projects/:projectId (Get single project details, its milestones, and progress)
+router.get("/:projectId", protect, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const user = req.user;
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: {
+        group: {
+          select: {
+            id: true,
+            name: true,
+            members: {
+              select: { id: true, name: true, email: true, rollNumber: true },
+            },
+            leader: { select: { id: true, name: true, email: true } },
+          },
+        },
+        supervisor: {
+          select: { id: true, name: true, email: true, department: true },
+        },
+        proposedBy: { select: { id: true, name: true, email: true } },
+        milestones: {
+          // Include milestones to calculate progress and for viewing
+          orderBy: { createdAt: "asc" },
+        },
+        // We could also include submissions and feedback here later
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // Authorization: User must be a member of the project's group OR the project's supervisor
+    const isMemberInProjectGroup = project.group.members.some(
+      (member) => member.id === user.id
+    );
+    const isLeaderOfProjectGroup = project.group.leaderId === user.id;
+    const isProjectSupervisor = project.supervisorId === user.id;
+
+    if (
+      !isMemberInProjectGroup &&
+      !isLeaderOfProjectGroup &&
+      !isProjectSupervisor
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to view this project." });
+    }
+
+    // Calculate progress
+    let progress = 0;
+    const totalMilestones = project.milestones.length;
+    if (totalMilestones > 0) {
+      const completedMilestones = project.milestones.filter(
+        (m) => m.isCompleted
+      ).length;
+      progress = Math.round((completedMilestones / totalMilestones) * 100);
+    }
+
+    // Add progress to the project object
+    const projectWithProgress = { ...project, progress };
+
+    res.status(200).json(projectWithProgress);
+  } catch (error) {
+    console.error("Get project details error:", error);
+    res.status(500).json({
+      message: "Server error while fetching project details.",
+      error: error.message,
+    });
+  }
+});
+
 export default router;

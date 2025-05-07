@@ -40,6 +40,7 @@
       availability  TeacherAvailability[] @relation("TeacherAvailability")
       sentGroupInvitations GroupInvitation[] @relation("SentGroupInvitations")
       receivedGroupInvitations GroupInvitation[] @relation("InvitedToGroup")
+      milestonesUpdated Milestone[] @relation("MilestonesUpdatedBy") // Renamed to avoid conflict if User already had "Milestone[]"
 
       createdAt DateTime @default(now())
       updatedAt DateTime @updatedAt
@@ -107,15 +108,17 @@
       title       String
       description String?
       isCompleted Boolean @default(false)
-      lastUpdatedBy String? // User ID of who last updated it
-      // lastUpdatedUser User? // Optional: relation to User model
+      dueDate   DateTime?
 
       projectId String
-      project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // If project deleted, milestones deleted
+      project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+      // New field to track who last updated it
+      lastUpdatedByUserId String? // Optional: who made the last update
+      lastUpdatedByUser   User?   @relation("MilestonesUpdatedBy", fields: [lastUpdatedByUserId], references: [id])
 
       createdAt DateTime @default(now())
       updatedAt DateTime @updatedAt
-      dueDate   DateTime?
     }
 
     model Submission {
